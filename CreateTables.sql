@@ -32,6 +32,16 @@ CREATE TABLE loja.enderecos
     CONSTRAINT pk_enderecos PRIMARY KEY (id)
 ) INHERITS (base.auditoria);
 
+CREATE TABLE loja.clientes_enderecos
+(
+    cliente_id  UUID NOT NULL,
+    endereco_id UUID NOT NULL,
+
+    CONSTRAINT pk_clientes_enderecos PRIMARY KEY (cliente_id, endereco_id),
+    CONSTRAINT fk_clientes_enderecos_cliente FOREIGN KEY (cliente_id) REFERENCES loja.clientes (id) ON DELETE CASCADE,
+    CONSTRAINT fk_clientes_enderecos_endereco FOREIGN KEY (endereco_id) REFERENCES loja.enderecos (id)
+);
+
 CREATE TABLE loja.pedidos
 (
     id          UUID        DEFAULT gen_random_uuid(),

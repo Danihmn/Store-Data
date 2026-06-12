@@ -2,7 +2,7 @@ CREATE SCHEMA loja;
 CREATE SCHEMA catalogo;
 CREATE SCHEMA base;
 
--- tabela base com colunas padrao
+-- TABELA BASE COM COLUNAS PADRAO
 CREATE TABLE base.auditoria
 (
     criado_em     TIMESTAMP DEFAULT NOW(),
@@ -67,4 +67,11 @@ CREATE TABLE loja.produtos_pedidos
     CONSTRAINT fk_produtos_pedidos_pedido FOREIGN KEY (pedido_id) REFERENCES loja.pedidos (id),
     CONSTRAINT fk_produtos_pedidos_produto FOREIGN KEY (produto_id) REFERENCES catalogo.produtos (id),
     CONSTRAINT chk_produtos_pedidos_quantidade CHECK (quantidade > 0)
-)
+);
+
+-- CORRIGE CONSTRAINT
+ALTER TABLE loja.produtos_pedidos
+    DROP CONSTRAINT fk_produtos_pedidos_pedido;
+
+ALTER TABLE loja.produtos_pedidos
+    ADD CONSTRAINT fk_produtos_pedidos_pedido FOREIGN KEY (pedido_id) REFERENCES loja.pedidos (id) ON DELETE CASCADE;

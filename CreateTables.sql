@@ -9,6 +9,31 @@ CREATE TABLE base.auditoria
     atualizado_em TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE loja.enderecos
+(
+    id     UUID DEFAULT gen_random_uuid(),
+    rua    VARCHAR(200) NOT NULL,
+    cidade VARCHAR(100) NOT NULL,
+    estado CHAR(2)      NOT NULL,
+    cep    VARCHAR(9)   NOT NULL,
+
+    CONSTRAINT pk_enderecos PRIMARY KEY (id)
+) INHERITS (base.auditoria);
+
+CREATE TABLE loja.lojas
+(
+    id            UUID                  DEFAULT gen_random_uuid(),
+    razao_social  VARCHAR(200) NOT NULL,
+    nome_fantasia VARCHAR(200),
+    cnpj          CHAR(14)     NOT NULL,
+    ativo         BOOLEAN      NOT NULL DEFAULT TRUE,
+    id_endereco   UUID         NOT NULL,
+
+    CONSTRAINT pk_lojas PRIMARY KEY (id),
+    CONSTRAINT uq_lojas_cnpj UNIQUE (cnpj),
+    CONSTRAINT fk_lojas_endereco FOREIGN KEY (id_endereco) REFERENCES loja.enderecos (id)
+) INHERITS (base.auditoria);
+
 CREATE TABLE loja.clientes
 (
     id       UUID DEFAULT gen_random_uuid(),
@@ -19,17 +44,6 @@ CREATE TABLE loja.clientes
     CONSTRAINT pk_clientes PRIMARY KEY (id),
     CONSTRAINT uq_clientes_email UNIQUE (email),
     CONSTRAINT uq_clientes_telefone UNIQUE (telefone)
-) INHERITS (base.auditoria);
-
-CREATE TABLE loja.enderecos
-(
-    id     UUID DEFAULT gen_random_uuid(),
-    rua    VARCHAR(200) NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    estado CHAR(2)      NOT NULL,
-    cep    VARCHAR(9)   NOT NULL,
-
-    CONSTRAINT pk_enderecos PRIMARY KEY (id)
 ) INHERITS (base.auditoria);
 
 CREATE TABLE loja.clientes_enderecos

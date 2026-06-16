@@ -22,7 +22,8 @@ CREATE OR REPLACE FUNCTION catalogo.fn_decrementa_estoque()
 $$
 BEGIN
     UPDATE catalogo.produtos
-    SET estoque = estoque - NEW.quantidade
+    SET estoque       = estoque - NEW.quantidade,
+        atualizado_em = NOW()
     WHERE id = NEW.produto_id;
 
     RETURN NEW;

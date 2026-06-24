@@ -1,101 +1,101 @@
-CREATE SCHEMA loja;
-CREATE SCHEMA catalogo;
+CREATE SCHEMA store;
+CREATE SCHEMA catalog;
 CREATE SCHEMA base;
 
--- TABELA BASE COM COLUNAS PADRAO
-CREATE TABLE base.auditoria
+-- BASE TABLE WITH STANDARD COLUMNS
+CREATE TABLE base.audit
 (
-    criado_em     TIMESTAMP DEFAULT NOW(),
-    atualizado_em TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE loja.enderecos
-(
-    id     UUID DEFAULT gen_random_uuid(),
-    rua    VARCHAR(200) NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    estado CHAR(2)      NOT NULL,
-    cep    VARCHAR(9)   NOT NULL,
-
-    CONSTRAINT pk_enderecos PRIMARY KEY (id)
-) INHERITS (base.auditoria);
-
-CREATE TABLE loja.lojas
-(
-    id            UUID                  DEFAULT gen_random_uuid(),
-    razao_social  VARCHAR(200) NOT NULL,
-    nome_fantasia VARCHAR(200),
-    cnpj          CHAR(14)     NOT NULL,
-    ativo         BOOLEAN      NOT NULL DEFAULT TRUE,
-    id_endereco   UUID         NOT NULL,
-
-    CONSTRAINT pk_lojas PRIMARY KEY (id),
-    CONSTRAINT uq_lojas_cnpj UNIQUE (cnpj),
-    CONSTRAINT fk_lojas_endereco FOREIGN KEY (id_endereco) REFERENCES loja.enderecos (id)
-) INHERITS (base.auditoria);
-
-CREATE TABLE loja.clientes
+CREATE TABLE store.addresses
 (
     id       UUID DEFAULT gen_random_uuid(),
-    nome     VARCHAR(100) NOT NULL,
-    email    VARCHAR(150) NOT NULL,
-    telefone VARCHAR(20),
+    street   VARCHAR(200) NOT NULL,
+    city     VARCHAR(100) NOT NULL,
+    state    CHAR(2)      NOT NULL,
+    zip_code VARCHAR(9)   NOT NULL,
 
-    CONSTRAINT pk_clientes PRIMARY KEY (id),
-    CONSTRAINT uq_clientes_email UNIQUE (email),
-    CONSTRAINT uq_clientes_telefone UNIQUE (telefone)
-) INHERITS (base.auditoria);
+    CONSTRAINT pk_addresses PRIMARY KEY (id)
+) INHERITS (base.audit);
 
-CREATE TABLE loja.clientes_enderecos
+CREATE TABLE store.stores
 (
-    cliente_id  UUID NOT NULL,
-    endereco_id UUID NOT NULL,
+    id         UUID                  DEFAULT gen_random_uuid(),
+    legal_name VARCHAR(200) NOT NULL,
+    trade_name VARCHAR(200),
+    cnpj       CHAR(14)     NOT NULL,
+    active     BOOLEAN      NOT NULL DEFAULT TRUE,
+    address_id UUID         NOT NULL,
 
-    CONSTRAINT pk_clientes_enderecos PRIMARY KEY (cliente_id, endereco_id),
-    CONSTRAINT fk_clientes_enderecos_cliente FOREIGN KEY (cliente_id) REFERENCES loja.clientes (id) ON DELETE CASCADE,
-    CONSTRAINT fk_clientes_enderecos_endereco FOREIGN KEY (endereco_id) REFERENCES loja.enderecos (id)
+    CONSTRAINT pk_stores PRIMARY KEY (id),
+    CONSTRAINT uq_stores_cnpj UNIQUE (cnpj),
+    CONSTRAINT fk_stores_address FOREIGN KEY (address_id) REFERENCES store.addresses (id)
+) INHERITS (base.audit);
+
+CREATE TABLE store.customers
+(
+    id    UUID DEFAULT gen_random_uuid(),
+    name  VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    phone VARCHAR(20),
+
+    CONSTRAINT pk_customers PRIMARY KEY (id),
+    CONSTRAINT uq_customers_email UNIQUE (email),
+    CONSTRAINT uq_customers_phone UNIQUE (phone)
+) INHERITS (base.audit);
+
+CREATE TABLE store.customer_addresses
+(
+    customer_id UUID NOT NULL,
+    address_id  UUID NOT NULL,
+
+    CONSTRAINT pk_customer_addresses PRIMARY KEY (customer_id, address_id),
+    CONSTRAINT fk_customer_addresses_customer FOREIGN KEY (customer_id) REFERENCES store.customers (id) ON DELETE CASCADE,
+    CONSTRAINT fk_customer_addresses_address FOREIGN KEY (address_id) REFERENCES store.addresses (id)
 );
 
-CREATE TABLE loja.pedidos
+CREATE TABLE store.orders
 (
     id          UUID        DEFAULT gen_random_uuid(),
-    cliente_id  UUID           NOT NULL,
-    endereco_id UUID           NOT NULL,
-    status      VARCHAR(20) DEFAULT 'pendente',
+    customer_id UUID           NOT NULL,
+    address_id  UUID           NOT NULL,
+    status      VARCHAR(20) DEFAULT 'pending',
     total       NUMERIC(10, 2) NOT NULL,
 
-    CONSTRAINT pk_pedidos PRIMARY KEY (id),
-    CONSTRAINT fk_cliente FOREIGN KEY (cliente_id) REFERENCES loja.clientes (id),
-    CONSTRAINT fk_endereco FOREIGN KEY (endereco_id) REFERENCES loja.enderecos (id),
-    CONSTRAINT chk_pedidos_status CHECK ( status IN ('pendente', 'pago', 'enviado', 'entregue', 'cancelado') )
-) INHERITS (base.auditoria);
+    CONSTRAINT pk_orders PRIMARY KEY (id),
+    CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES store.customers (id),
+    CONSTRAINT fk_orders_address FOREIGN KEY (address_id) REFERENCES store.addresses (id),
+    CONSTRAINT chk_orders_status CHECK ( status IN ('pending', 'paid', 'shipped', 'delivered', 'canceled') )
+) INHERITS (base.audit);
 
-CREATE TABLE catalogo.produtos
+CREATE TABLE catalog.products
 (
-    id             UUID DEFAULT gen_random_uuid(),
-    descricao      VARCHAR(200)   NOT NULL,
-    preco_unitario NUMERIC(10, 2) NOT NULL,
-    estoque        INT  DEFAULT 0,
+    id          UUID DEFAULT gen_random_uuid(),
+    description VARCHAR(200)   NOT NULL,
+    unit_price  NUMERIC(10, 2) NOT NULL,
+    stock       INT  DEFAULT 0,
 
-    CONSTRAINT pk_produtos PRIMARY KEY (id),
-    CONSTRAINT chk_produtos_estoque CHECK (estoque >= 0)
-) INHERITS (base.auditoria);
+    CONSTRAINT pk_products PRIMARY KEY (id),
+    CONSTRAINT chk_products_stock CHECK (stock >= 0)
+) INHERITS (base.audit);
 
-CREATE TABLE loja.produtos_pedidos
+CREATE TABLE store.order_products
 (
-    pedido_id  UUID NOT NULL,
-    produto_id UUID NOT NULL,
-    quantidade INT  NOT NULL,
+    order_id   UUID NOT NULL,
+    product_id UUID NOT NULL,
+    quantity   INT  NOT NULL,
 
-    CONSTRAINT pk_produtos_pedidos PRIMARY KEY (pedido_id, produto_id),
-    CONSTRAINT fk_produtos_pedidos_pedido FOREIGN KEY (pedido_id) REFERENCES loja.pedidos (id),
-    CONSTRAINT fk_produtos_pedidos_produto FOREIGN KEY (produto_id) REFERENCES catalogo.produtos (id),
-    CONSTRAINT chk_produtos_pedidos_quantidade CHECK (quantidade > 0)
+    CONSTRAINT pk_order_products PRIMARY KEY (order_id, product_id),
+    CONSTRAINT fk_order_products_order FOREIGN KEY (order_id) REFERENCES store.orders (id),
+    CONSTRAINT fk_order_products_product FOREIGN KEY (product_id) REFERENCES catalog.products (id),
+    CONSTRAINT chk_order_products_quantity CHECK (quantity > 0)
 );
 
--- CORRIGE CONSTRAINT
-ALTER TABLE loja.produtos_pedidos
-    DROP CONSTRAINT fk_produtos_pedidos_pedido;
+-- FIX CONSTRAINT
+ALTER TABLE store.order_products
+    DROP CONSTRAINT fk_order_products_order;
 
-ALTER TABLE loja.produtos_pedidos
-    ADD CONSTRAINT fk_produtos_pedidos_pedido FOREIGN KEY (pedido_id) REFERENCES loja.pedidos (id) ON DELETE CASCADE;
+ALTER TABLE store.order_products
+    ADD CONSTRAINT fk_order_products_order FOREIGN KEY (order_id) REFERENCES store.orders (id) ON DELETE CASCADE;

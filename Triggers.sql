@@ -1,11 +1,11 @@
-CREATE TRIGGER trg_verifica_estoque
+CREATE TRIGGER trg_check_stock
     BEFORE INSERT
-    ON loja.produtos_pedidos
+    ON store.order_products
     FOR EACH ROW
-EXECUTE FUNCTION loja.fn_valida_estoque();
+EXECUTE FUNCTION store.fn_validate_stock();
 
-CREATE TRIGGER trg_decrementa_estoque
+CREATE TRIGGER trg_decrement_stock
     AFTER INSERT
-    ON loja.produtos_pedidos
+    ON store.order_products
     FOR EACH ROW
-EXECUTE FUNCTION catalogo.fn_decrementa_estoque();
+EXECUTE FUNCTION catalog.fn_decrement_stock();

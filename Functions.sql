@@ -1,30 +1,30 @@
-CREATE OR REPLACE FUNCTION loja.fn_valida_estoque()
+CREATE OR REPLACE FUNCTION store.fn_validate_stock()
     RETURNS TRIGGER AS
 $$
 DECLARE
-    estoque_atual INT;
+    current_stock INT;
 BEGIN
-    SELECT estoque
-    INTO estoque_atual
-    FROM catalogo.produtos
-    WHERE id = NEW.produto_id;
+    SELECT stock
+    INTO current_stock
+    FROM catalog.products
+    WHERE id = NEW.product_id;
 
-    IF estoque_atual < NEW.quantidade THEN
-        RAISE EXCEPTION 'ESTOQUE INSUFICIENTE: Disponível %, solicitado %', estoque_atual, NEW.quantidade;
+    IF current_stock < NEW.quantity THEN
+        RAISE EXCEPTION 'INSUFFICIENT STOCK: Available %, requested %', current_stock, NEW.quantity;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION catalogo.fn_decrementa_estoque()
+CREATE OR REPLACE FUNCTION catalog.fn_decrement_stock()
     RETURNS TRIGGER AS
 $$
 BEGIN
-    UPDATE catalogo.produtos
-    SET estoque       = estoque - NEW.quantidade,
-        atualizado_em = NOW()
-    WHERE id = NEW.produto_id;
+    UPDATE catalog.products
+    SET stock      = stock - NEW.quantity,
+        updated_at = NOW()
+    WHERE id = NEW.product_id;
 
     RETURN NEW;
 END;

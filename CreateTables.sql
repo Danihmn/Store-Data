@@ -39,7 +39,7 @@ CREATE TABLE store.customers
     id    UUID DEFAULT gen_random_uuid(),
     name  VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL,
-    phone VARCHAR(20),
+    phone VARCHAR(20) NOT NULL,
 
     CONSTRAINT pk_customers PRIMARY KEY (id),
     CONSTRAINT uq_customers_email UNIQUE (email),

@@ -9,6 +9,20 @@ CREATE TABLE base.audit
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE store.users
+(
+    id              UUID                  DEFAULT gen_random_uuid(),
+    name            VARCHAR(100) NOT NULL,
+    email           VARCHAR(150) NOT NULL,
+    hashed_password TEXT         NOT NULL,
+    active          BOOLEAN      NOT NULL DEFAULT TRUE,
+    role            VARCHAR(20)  NOT NULL,
+
+    CONSTRAINT pk_users PRIMARY KEY (id),
+    CONSTRAINT uq_users_email UNIQUE (email),
+    CONSTRAINT chk_users_role CHECK (role IN ('admin', 'seller', 'purchaser', 'stock_clerk'))
+) INHERITS (base.audit);
+
 CREATE TABLE store.addresses
 (
     id       UUID DEFAULT gen_random_uuid(),
@@ -39,7 +53,7 @@ CREATE TABLE store.customers
     id    UUID DEFAULT gen_random_uuid(),
     name  VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
+    phone VARCHAR(20)  NOT NULL,
 
     CONSTRAINT pk_customers PRIMARY KEY (id),
     CONSTRAINT uq_customers_email UNIQUE (email),
